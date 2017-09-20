@@ -49,8 +49,12 @@ class RegisterController extends Controller
     {
         return Validator::make($data, [
             'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
+            'email' => 'required|string|email|max:100|unique:users',
             'password' => 'required|string|min:6|confirmed',
+            'signup_with' => 'required|string',
+            'device_id' => 'required|integer',
+            'gender' => 'required|string|in:'.implode(',', User::GENDER),
+            // 'dob' => 'required|date_format:Y-m-d',
         ]);
     }
 
@@ -62,10 +66,20 @@ class RegisterController extends Controller
      */
     protected function create(array $data)
     {
-        return User::create([
-            'name' => $data['name'],
+        User::create([
             'email' => $data['email'],
             'password' => bcrypt($data['password']),
+            'signup_with' => $data['signup_with'],
+            'device_id' => $data['device_id'],
+            'name' => $data['name'],
+            'gender' => $data['gender'],
+            'dob' => $data['dob'],
+            'phone' => $data['phone'],
+            'profile_pic' => $data['profile_pic'],
+            'country_id' => $data['country_id'],
         ]);
+
+        return $this->returnJsonResponse(['message' => 'User created']);
+        die('done');
     }
 }

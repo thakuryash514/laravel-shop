@@ -14,3 +14,10 @@
 Route::get('/', function () {
     return view('welcome');
 });
+
+// 4uth::routes();
+
+Route::get('/home', 'HomeController@index')->name('home');
+Route::post('users/register', 'Auth\RegisterController@register');
+Route::post('users/login', 'Auth\LoginController@login');
+Route::post('users/socialLogin', 'Auth\LoginController@socialLogin');
