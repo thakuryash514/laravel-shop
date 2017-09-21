@@ -3,11 +3,11 @@
 namespace App\Http\Controllers\Auth;
 
 use App\User;
-use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Foundation\Auth\RegistersUsers;
+use App\Http\Controllers\ApiController;
 
-class RegisterController extends Controller
+class RegisterController extends ApiController
 {
     /*
     |--------------------------------------------------------------------------
@@ -49,8 +49,12 @@ class RegisterController extends Controller
     {
         return Validator::make($data, [
             'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
+            'email' => 'required|string|email|max:100|unique:users',
             'password' => 'required|string|min:6|confirmed',
+            'signup_with' => 'required|string',
+            'device_id' => 'required|integer',
+            'gender' => 'required|string|in:'.implode(',', User::GENDER),
+            'dob' => 'required|date_format:Y-m-d',
         ]);
     }
 
@@ -62,10 +66,10 @@ class RegisterController extends Controller
      */
     protected function create(array $data)
     {
-        return User::create([
-            'name' => $data['name'],
-            'email' => $data['email'],
-            'password' => bcrypt($data['password']),
-        ]);
+            $user = new User();
+            $user->fill($data);
+            $user->active = 1;
+            $user->save();
+            return $user;
     }
 }
