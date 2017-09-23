@@ -3,6 +3,9 @@
 namespace App\Http\Controllers\Auth;
 
 use App\User;
+use JWTAuth;
+use Illuminate\Http\Request;
+use Illuminate\Auth\Events\Registered;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Foundation\Auth\RegistersUsers;
 use App\Http\Controllers\ApiController;
@@ -70,6 +73,71 @@ class RegisterController extends ApiController
             $user->fill($data);
             $user->active = 1;
             $user->save();
+
             return $user;
+    }
+
+    public function register(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+        'name' => 'required',
+        'email' => 'required|email|unique:users',
+        'password' => 'required',
+        'signup_with' => 'required',
+        'device_id' => 'required',
+        'gender' => 'required',
+        'dob' => 'required',
+        ]);
+
+        if ($validator->fails()) {
+            $failedRules = $validator->failed();
+            if (isset($failedRules['email']['Unique'])) {
+                return response()->json([
+                    'status' => 'fail',
+                    'message' => 'Already register user.'
+                ], 422);
+            }
+            if (isset($failedRules['email']['Email'])) {
+                return response()->json([
+                    'status' => 'fail',
+                    'message' => 'Failed to register, invalid email id.'
+                ], 422);
+            }
+            return response()->json([
+                'status' => 'fail',
+                'message' => 'Failed to register, invalid parameters passed.'
+            ], 422);
+        }
+        if (! $request->has(['name','email','password','signup_with','device_id','gender','dob'])) {
+            return $this->abortJsonResponse([
+                'status' => 'fail',
+                'message' => 'Failed, mandatory parameters missing'
+            ], 422);
+        }
+
+        event(new Registered($user = $this->create($request->all())));
+
+        if (! $user) {
+            $this->abortJsonResponse([
+                'status' => 'fail',
+                'message' => 'Something going wrong, please try again.'
+            ], 422);
+        }
+
+        try {
+            $token = JWTAuth::fromUser($user);
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Successfully register user.',
+                'data' => [
+                    'token' => $token,
+                ],
+            ]);
+        } catch (JWTAuthException $e) {
+            return response()->json([
+                'status' => 'fail',
+                'message' => 'Please try again later.',
+            ]);
+        }
     }
 }
