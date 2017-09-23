@@ -17,8 +17,8 @@ class CreateUsersTable extends Migration
             $table->increments('id');
             $table->string('name');
             $table->string('email',100)->unique();
-            $table->string('password');
-            $table->string('signup_with');
+            $table->string('password')->nullable();
+            $table->tinyInteger('signup_with')->comment('1 => manual. 2 => facebook');
             $table->integer('device_id')->unsigned();
             $table->integer('country_id')->unsigned()->nullable();
             $table->string('gender');

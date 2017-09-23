@@ -22,6 +22,7 @@ class DeviceController extends Controller
 
         try {
             $device = Device::query()->where('device_uid',$request->input('device_uid'))->first();
+            dd($device);
             $message = 'Device updated successfully.';
             if (! $device) {
                 $device = new Device();

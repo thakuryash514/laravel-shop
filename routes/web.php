@@ -17,8 +17,12 @@ Route::get('/', function () {
 
  Auth::routes();
 
-Route::get('/home', 'HomeController@index')->name('home');
-Route::post('users/register', 'Auth\RegisterController@register');
-Route::post('users/login', 'Auth\LoginController@login');
-Route::post('users/socialLogin', 'Auth\LoginController@socialLogin');
-Route::post('users/registerDevice', 'DeviceController@registerDevice');
+Route::group(['middleware' => ['api','cors']], function () {
+    Route::post('auth/login', 'ApiController@login');
+	Route::get('user', 'ApiController@getAuthUser');
+	Route::get('/home', 'HomeController@index')->name('home');
+	Route::post('users/register', 'Auth\RegisterController@register');
+	Route::post('users/login', 'Auth\LoginController@login');
+	Route::post('users/socialLogin', 'Auth\LoginController@socialLogin');
+	Route::post('users/registerDevice', 'DeviceController@registerDevice');
+});
