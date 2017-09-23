@@ -33,28 +33,4 @@ class ApiController extends Controller
     	$user = JWTAuth::toUser($request->token);        
         return response()->json(['result' => $user]);
     }
-
-    public function login(Request $request){
-        $credentials = $request->only('email', 'password');
-        $token = null;
-        try {
-            if (!$token = JWTAuth::attempt($credentials)) {
-                return response()->json([
-                    'response' => 'error',
-                    'message' => 'invalid_email_or_password',
-                ]);
-            }
-        } catch (JWTAuthException $e) {
-            return response()->json([
-                'response' => 'error',
-                'message' => 'failed_to_create_token',
-            ]);
-        }
-        return response()->json([
-            'response' => 'success',
-            'result' => [
-                'token' => $token,
-            ],
-        ]);
-    }
 }
