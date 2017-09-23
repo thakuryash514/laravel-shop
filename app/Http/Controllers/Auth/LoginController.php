@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\User;
+use JWTAuth;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Auth\AuthenticatesUsers;
 use Illuminate\Http\Request;
@@ -49,7 +50,10 @@ class LoginController extends Controller
             'password' => 'required',
         ]);
         if ($validator->fails()) {
-            return response()->json(['message' => 'Failed, mandatory parameters missing.'], 422);
+            return response()->json([
+                'status' => 'fail',
+                'message' => 'Failed, mandatory parameters missing.'
+            ], 422);
         }
         try {
             $user = User::query()->whereEmail($request->input('email'))
@@ -57,17 +61,82 @@ class LoginController extends Controller
                 ->firstOrFail();
             $user->device_id = $request->input('device_id');
             $user->save();
+            $token = JWTAuth::fromUser($user);
 
             if (! $user->active) {
-                return response()->json(['message' => 'Failed to login, your account is inactive.'], 422);
+                return response()->json([
+                    'status' => 'fail',
+                    'message' => 'Failed to login, your account is inactive.'
+                ], 422);
             }
-            return response()->json(['message' => 'Successfully login.'], 200);
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Successfully login.',
+                'data' => ['token' => $token]
+            ], 200);
         }
         catch (ModelNotFoundException $e) {
-            return response()->json(['message' => 'Failed to login, credentials are incorrect.'], 404);
+            return response()->json([
+                'status' => 'fail',
+                'message' => 'Failed to login, credentials are incorrect.'
+            ], 404);
         }
         catch (\Exception $e) {
-            return response()->json(['message' => 'Please try again later.'], 422);
+            return response()->json([
+                'status' => 'fail',
+                'message' => 'Please try again later.'
+            ], 422);
+        }
+    }
+
+    public function socialLogin(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'device_id' => 'required',
+            'email' => 'required|email',
+        ]);
+        if ($validator->fails()) {
+            $failedRules = $validator->failed();
+            if (isset($failedRules['email']['Email'])) {
+                return response()->json([
+                    'status' => 'fail',
+                    'message' => 'Failed, invalid email id'
+                ], 422);
+            }
+            return response()->json([
+                'status' => 'fail',
+                'message' => 'Failed, mandatory parameters missing.'
+            ], 422);
+        }
+        try {
+            $user = User::query()->whereEmail($request->input('email'))->firstOrFail();
+            $user->device_id = $request->input('device_id');
+            $user->save();
+            $token = JWTAuth::fromUser($user);
+
+            if (! $user->active) {
+                return response()->json([
+                    'status' => 'fail',
+                    'message' => 'Failed to login, your account is inactive.'
+                ], 422);
+            }
+            return response()->json([
+                'status' => 'success',
+                'message' => 'User data available.',
+                'data' => ['token' => $token]
+            ], 200);
+        }
+        catch (ModelNotFoundException $e) {
+            return response()->json([
+                'status' => 'fail',
+                'message' => 'User data not found.'
+            ], 404);
+        }
+        catch (\Exception $e) {
+            return response()->json([
+                'status' => 'fail',
+                'message' => 'Please try again later.'
+            ], 422);
         }
     }
 }
