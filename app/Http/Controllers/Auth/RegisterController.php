@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\User;
+use Illuminate\Support\Facades\File;
 use JWTAuth;
 use Illuminate\Http\Request;
 use Illuminate\Auth\Events\Registered;
@@ -70,11 +71,29 @@ class RegisterController extends ApiController
     protected function create(array $data)
     {
             $user = new User();
+            $data['profile_pic'] = $this->uploadProfilePic($data);
             $user->fill($data);
             $user->active = 1;
             $user->save();
 
             return $user;
+    }
+
+    protected function uploadProfilePic($data)
+    {
+        $base64String = $data['profile_pic'];
+        $file_name = User::PROFILE_PATH.sha1($data['email']).time().'.png';
+        @list(, $base64String) = explode(';', $base64String);
+        @list(, $base64String) = explode(',', $base64String);
+        if($base64String!=""){
+            $path = storage_path('app'.DIRECTORY_SEPARATOR.'public'.DIRECTORY_SEPARATOR.User::PROFILE_PATH);
+            if (! file_exists($path)) {
+                File::makeDirectory($path, 0777, true);
+            }
+            \Storage::disk('public')->put($file_name,base64_decode($base64String));
+        }
+
+        return $file_name;
     }
 
     public function register(Request $request)
