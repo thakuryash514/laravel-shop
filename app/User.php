@@ -31,6 +31,8 @@ class User extends Authenticatable implements JWTSubject
         'password', 'remember_token',
     ];
 
+    const PROFILE_PATH = 'users'.DIRECTORY_SEPARATOR.'profile_pictures'.DIRECTORY_SEPARATOR;
+
     public function getJWTIdentifier()
     {
         return $this->getUserId();
